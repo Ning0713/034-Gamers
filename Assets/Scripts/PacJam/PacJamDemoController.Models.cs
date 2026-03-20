@@ -3,7 +3,8 @@ using UnityEngine;
 public partial class PacJamDemoController
 {
     private enum GhostType { Red, Pink, Blue, Orange }
-    private enum GhostState { Scatter, Chase, Frightened, Eaten }
+    private enum StagePhase { PelletRun, GhostHuntIntro, GhostHunt }
+    private enum GhostState { Scatter, Chase, Frightened, Eaten, Guarded, Prey, Captured }
 
     private class Actor
     {
@@ -26,6 +27,7 @@ public partial class PacJamDemoController
         public Color NormalColor;
         public Vector2Int ScatterTarget;
         public bool Eaten;
+        public bool Captured;
     }
 
     private sealed class Pellet

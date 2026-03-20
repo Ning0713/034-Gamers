@@ -1,15 +1,10 @@
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public partial class PacJamDemoController
 {
-    private static bool IsRestartPressed()
-    {
-        Keyboard keyboard = Keyboard.current;
-        return keyboard != null && keyboard.rKey.wasPressedThisFrame;
-    }
-
     private void AdvanceActor(Actor a, float speed, float dt, Action<Actor> onCellCenter)
     {
         float remain = speed * CellSize * dt;
@@ -162,24 +157,205 @@ public partial class PacJamDemoController
         return Vector2Int.zero;
     }
 
-    private static void QuitGame()
+    private void ReturnToTitleMenu()
     {
-#if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
-#else
-        Application.Quit();
-#endif
+        SceneManager.LoadScene(StartMenuSceneName);
+    }
+
+    private void LoadMariodemoCutscene()
+    {
+        SceneManager.LoadScene(MariodemoProgressState.CutsceneSceneName);
+    }
+
+    private void SetPlayerVisible(bool visible)
+    {
+        if (player == null) return;
+        if (player.Body != null) player.Body.enabled = visible;
+        if (player.IndicatorRenderer != null) player.IndicatorRenderer.enabled = visible;
     }
 
     private void SnapToCell(Actor a) { a.Root.position = CellToWorld(a.Cell, a.Root.position.z); }
     private bool CanMove(Vector2Int from, Vector2Int dir) { return dir != Vector2Int.zero && IsWalkable(from + dir); }
     private bool IsWalkable(Vector2Int c) { return c.x >= 0 && c.x < width && c.y >= 0 && c.y < height && map[c.x, c.y] != '#'; }
-    private string ModeName() { return frightenedTimer > 0f ? "Frightened" : (modePhase % 2 == 0 ? "Scatter" : "Chase"); }
-
     private static Vector3 GridDirToWorld(Vector2Int d) { return new Vector3(d.x, -d.y, 0f); }
     private Vector3 CellToWorld(Vector2Int c, float z) { return new Vector3(c.x * CellSize, -c.y * CellSize, z); }
     private static Color Faint(Color c) { return Color.Lerp(c, Color.white, 0.65f); }
-    private void Play(AudioClip clip) { if (clip != null && sfxSource != null) sfxSource.PlayOneShot(clip); }
+    private void Play(AudioClip clip)
+    {
+        if (clip == null) return;
+        EnsureAudioSources();
+        if (sfxSource != null) sfxSource.PlayOneShot(clip);
+    }
+
+    private void EnsureAudioSources()
+    {
+        if (sfxSource == null)
+        {
+            sfxSource = GetComponent<AudioSource>();
+            if (sfxSource == null) sfxSource = gameObject.AddComponent<AudioSource>();
+            ConfigureAudioSource(sfxSource, false, 0.95f);
+        }
+
+        if (stateLoopSource == null)
+        {
+            stateLoopSource = gameObject.AddComponent<AudioSource>();
+            ConfigureAudioSource(stateLoopSource, true, 0.70f);
+        }
+
+        if (moveLoopSource == null)
+        {
+            moveLoopSource = gameObject.AddComponent<AudioSource>();
+            ConfigureAudioSource(moveLoopSource, true, 0.60f);
+        }
+
+        if (cueSource == null)
+        {
+            cueSource = gameObject.AddComponent<AudioSource>();
+            ConfigureAudioSource(cueSource, false, 0.90f);
+        }
+
+        if (ghostHuntBgmSource == null)
+        {
+            ghostHuntBgmSource = gameObject.AddComponent<AudioSource>();
+            ConfigureAudioSource(ghostHuntBgmSource, true, 0.48f);
+        }
+    }
+
+    private static void ConfigureAudioSource(AudioSource source, bool loop, float volume)
+    {
+        source.playOnAwake = false;
+        source.loop = loop;
+        source.spatialBlend = 0f;
+        source.volume = volume;
+    }
+
+    private void UpdateLoopingAudio()
+    {
+        if (!runtimeInitialized || player == null || showQuitConfirm || gameOver || victory || respawnTimer > 0f)
+        {
+            StopManagedAudioLoops();
+            return;
+        }
+
+        EnsureAudioSources();
+        TickQueuedAudio();
+        SyncLoopSource(stateLoopSource, DesiredStateLoopClip());
+        SyncLoopSource(moveLoopSource, DesiredMoveLoopClip());
+        SyncLoopSource(ghostHuntBgmSource, DesiredGhostHuntBgmClip());
+    }
+
+    private AudioClip DesiredStateLoopClip()
+    {
+        if (stagePhase != StagePhase.PelletRun)
+        {
+            return null;
+        }
+
+        if (frightenedTimer > 0f)
+        {
+            for (int i = 0; i < ghosts.Count; i++)
+            {
+                if (!ghosts[i].Captured && !ghosts[i].Eaten) return frightenedLoopSfx;
+            }
+
+            return null;
+        }
+
+        return chaseLoopUnlocked && modePhase % 2 == 1 ? chaseLoopSfx : null;
+    }
+
+    private AudioClip DesiredMoveLoopClip()
+    {
+        if (stagePhase == StagePhase.GhostHuntIntro)
+        {
+            return null;
+        }
+
+        return player.Dir != Vector2Int.zero ? moveLoopSfx : null;
+    }
+
+    private AudioClip DesiredGhostHuntBgmClip()
+    {
+        if (queuedGhostHuntBgm || stagePhase == StagePhase.PelletRun || ghostHuntBgm == null)
+        {
+            return null;
+        }
+
+        return stagePhase == StagePhase.GhostHuntIntro || stagePhase == StagePhase.GhostHunt ? ghostHuntBgm : null;
+    }
+
+    private void TickQueuedAudio()
+    {
+        if (!queuedGhostHuntBgm)
+        {
+            return;
+        }
+
+        ghostHuntBgmDelayTimer -= Time.unscaledDeltaTime;
+        if (ghostHuntBgmDelayTimer > 0f)
+        {
+            return;
+        }
+
+        ghostHuntBgmDelayTimer = 0f;
+        queuedGhostHuntBgm = false;
+    }
+
+    private float PlayCue(AudioClip clip)
+    {
+        EnsureAudioSources();
+        if (cueSource == null)
+        {
+            return 0f;
+        }
+
+        cueSource.Stop();
+        cueSource.clip = clip;
+        if (clip == null)
+        {
+            return 0f;
+        }
+
+        cueSource.Play();
+        return clip.length;
+    }
+
+    private static void SyncLoopSource(AudioSource source, AudioClip clip)
+    {
+        if (source == null) return;
+
+        if (clip == null)
+        {
+            if (source.isPlaying) source.Stop();
+            source.clip = null;
+            return;
+        }
+
+        if (source.clip != clip)
+        {
+            source.Stop();
+            source.clip = clip;
+        }
+
+        if (!source.isPlaying) source.Play();
+    }
+
+    private void StopManagedAudioLoops()
+    {
+        StopLoopSource(ghostHuntBgmSource);
+        StopLoopSource(stateLoopSource);
+        StopLoopSource(moveLoopSource);
+        StopLoopSource(cueSource);
+        queuedGhostHuntBgm = false;
+        ghostHuntBgmDelayTimer = 0f;
+    }
+
+    private static void StopLoopSource(AudioSource source)
+    {
+        if (source == null) return;
+        if (source.isPlaying) source.Stop();
+        source.clip = null;
+    }
 
     private static void SpawnFx(ParticleSystem prefab, Vector3 pos)
     {
@@ -188,3 +364,4 @@ public partial class PacJamDemoController
         Destroy(fx.gameObject, 1.5f);
     }
 }
+

@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Rendering;
 
 public partial class PacJamDemoController
@@ -29,19 +29,29 @@ public partial class PacJamDemoController
     {
         for (int i = transform.childCount - 1; i >= 0; i--) Destroy(transform.GetChild(i).gameObject);
 
+        StopManagedAudioLoops();
         pellets.Clear();
         ghosts.Clear();
         materialCache.Clear();
 
         score = 0;
-        lives = 3;
+        lives = InitialLives;
         gameOver = false;
         victory = false;
         respawnTimer = 0f;
         frightenedTimer = 0f;
+        enemyPauseTimer = EnemyPauseDuration;
+        ghostHuntIntroTimer = 0f;
+        mariodemoTransitionTimer = 0f;
+        ghostHuntBgmDelayTimer = 0f;
         modeTimer = 0f;
         modePhase = 0;
+        stagePhase = StagePhase.PelletRun;
+        mariodemoTransitionActive = false;
         simAccumulator = 0f;
+        showQuitConfirm = false;
+        chaseLoopUnlocked = false;
+        queuedGhostHuntBgm = false;
         upPressTime = -1f;
         downPressTime = -1f;
         leftPressTime = -1f;
@@ -59,6 +69,9 @@ public partial class PacJamDemoController
         SetupCamera();
         BuildMaze();
         BuildActors();
+        SetPlayerVisible(true);
+        Play(entranceSfx);
+        UpdateLoopingAudio();
     }
 
     private void SetupCamera()
@@ -76,7 +89,7 @@ public partial class PacJamDemoController
         cam.transform.position = new Vector3((width - 1) * 0.5f, -(height - 1) * 0.5f, -20f);
         cam.transform.rotation = Quaternion.identity;
         cam.orthographicSize = height * 0.55f;
-        cam.backgroundColor = new Color(0.02f, 0.03f, 0.10f);
+        cam.backgroundColor = new Color(0.02f, 0.02f, 0.02f);
         cam.clearFlags = CameraClearFlags.SolidColor;
     }
 
@@ -174,6 +187,7 @@ public partial class PacJamDemoController
             NormalColor = color,
             ScatterTarget = scatter,
             Eaten = false,
+            Captured = false,
         };
         ghosts.Add(g);
         UpdateIndicator(g);
@@ -313,3 +327,5 @@ public partial class PacJamDemoController
         return rectMesh;
     }
 }
+
+

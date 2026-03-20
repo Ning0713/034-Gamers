@@ -9,6 +9,28 @@ EditorBuildSettings:
     path: Assets/Scenes/SampleScene.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02
   - enabled: 1
+    path: Assets/Scenes/PacJam/PacJamStartMenu.unity
+    guid: bec7eac204beef745aeef1211f646566
+  - enabled: 1
+    path: Assets/Scenes/PacJam/Cutscene/PacJamIntroCutscene.unity
+    guid: ec771394210941b4ca3f3dce2f2c7a2e
+  - enabled: 1
     path: Assets/Scenes/PacJamDemo.unity
     guid: a81061065f95cb04eafe3f0b013894e9
+  - enabled: 1
+    path: Assets/Scenes/Mariodemo/Cutscene/MariodemoCutscene.unity
+    guid: a74fba85563cd2944bb61108df116532
+  - enabled: 1
+    path: Assets/Scenes/Mariodemo/MariodemoDemo.unity
+    guid: 89a954b42abbc514a8e8dc7654c22245
+  - enabled: 1
+    path: Assets/Scenes/Forestdemo/Cutscene/ForestdemoTransition.unity
+    guid: 5ea1faf2a80d1bb4a8b04d583dbc104e
+  - enabled: 1
+    path: Assets/Scenes/Forestdemo/ForestdemoDemo.unity
+    guid: 4f4be887a602e37448c5924986155f36
+  - enabled: 1
+    path: Assets/Scenes/Forestdemo/Ending/ForestdemoEnding.unity
+    guid: 28bd5fef4f72b6f459bb5dea4bdb572c
   m_configObjects: {}
+

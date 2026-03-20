@@ -167,13 +167,31 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   sfxSource: {fileID: 0}
-  pelletSfx: {fileID: 0}
-  powerPelletSfx: {fileID: 0}
-  ghostEatenSfx: {fileID: 0}
-  playerHitSfx: {fileID: 0}
+  pelletSfx: {fileID: 8300000, guid: 34ce04a290d989a44a061c671d63b5d4, type: 3}
+  powerPelletSfx: {fileID: 8300000, guid: 34ce04a290d989a44a061c671d63b5d4, type: 3}
+  ghostEatenSfx: {fileID: 8300000, guid: 3721c7b5ea326794e95fb38dcafba3f0, type: 3}
+  playerHitSfx: {fileID: 8300000, guid: 3e096c62f7208424d835633df987db50, type: 3}
+  entranceSfx: {fileID: 8300000, guid: 7dec8016ec0ea8a46b949e9d019f6936, type: 3}
+  ghostHuntIntroSfx: {fileID: 8300000, guid: a5b41148db871894faa0212dcc19babc, type: 3}
+  ghostHuntBgm: {fileID: 8300000, guid: 86075559779b7a441a3bf99f4a7890f4, type: 3}
+  frightenedLoopSfx: {fileID: 8300000, guid: b0230caea1198d64baf48e70a49b0626, type: 3}
+  chaseLoopSfx: {fileID: 8300000, guid: 7af2c6b14755db64c9840ad1b4691baa, type: 3}
+  moveLoopSfx: {fileID: 8300000, guid: 1ea05419582909549a4ebe0c1ed6321e, type: 3}
   pelletFxPrefab: {fileID: 0}
   ghostEatFxPrefab: {fileID: 0}
   playerHitFxPrefab: {fileID: 0}
+  quitDialogStayUv:
+    serializedVersion: 2
+    x: 0.153
+    y: 0.701
+    width: 0.23
+    height: 0.166
+  quitDialogExitUv:
+    serializedVersion: 2
+    x: 0.603
+    y: 0.701
+    width: 0.281
+    height: 0.166
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
